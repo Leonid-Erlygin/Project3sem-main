@@ -2,6 +2,7 @@
 #include <unistd.h>
 #include <vector>
 #include <wait.h>
+#include <fcntl.h>
 
 using namespace std;
 
@@ -11,7 +12,7 @@ string getCwd() {
     return s;
 }
 
-vector <char *> exclVector(string&cmd, string&input){//формирует вектор аргументов(так как они пришли)
+vector<char *> exclVector(string &cmd, string &input) {//формирует вектор аргументов(так как они пришли)
     vector<string> placeholder;
     vector<char *> arg;
     placeholder.push_back(cmd);
@@ -28,8 +29,10 @@ vector <char *> exclVector(string&cmd, string&input){//формирует век
     for (int i = 0; i <= k; ++i) {
         arg.push_back((char *) placeholder[i].c_str());
     }
+    arg.push_back(NULL);
     return arg;
 }
+
 void time(string &cmd, string &input) {
 
     vector<char *> arg = exclVector(cmd, input);
@@ -59,6 +62,34 @@ void cd(string &input) {
     }
 }
 
+//перенаправления вывода одного процесса на ввод другого
+void outRederection(string &command1, vector<char *> &args1, string &filename) {
+    pid_t pid = fork();
+    if (pid == 0) {
+        close(1);//closing out descriptor
+
+        const char *name = filename.c_str();
+        open(name, O_RDWR | O_CREAT | O_TRUNC, 0666);
+        string path;
+        if(command1!="time"){path = "/bin/" + command1;}
+        else{
+           path = "/usr/bin/time";
+        }
+        execvp(path.c_str(), &args1[0]);
+    } else {
+        int info;
+        waitpid(pid, &info, 0);
+    }
+}
+
+string getcmd(string &input) {//returns first word and truncates it
+    string cmd = input.substr(0, input.find(' '));
+    if (input.find(' ') + 1 != 0)
+        input = input.substr(input.find(' ') + 1, input.size());
+    else input = "";
+    return cmd;
+}
+
 int main(int argc, char **argv, char **envp) {
     /*for (int i = 0; i <argc; ++i) {
 
@@ -84,33 +115,37 @@ int main(int argc, char **argv, char **envp) {
         cout << dir << p;
         getline(cin, input);
 
-        string cmd = input.substr(0, input.find(' '));
-        if (input.find(' ') + 1 != 0)
-            input = input.substr(input.find(' ') + 1, input.size());
-        else input = "";
+        if (input.find('>') != -1) {
+            string s1 = input.substr(0, input.find('>'));
+            string s2 = input.substr(input.find('>') + 1, input.size());
+            string command1 = getcmd(s1);
+            vector <char *>arg = exclVector(command1,s1);
+            outRederection(command1,arg,s2);
 
-        if (cmd == "cd") {
-            cd(input);
-        } else
-        if (cmd == "pwd") {
-            cout << dir;
-        } else
-        if (cmd == "time") {//работает не всегда корректно
-            time(cmd, input);
-        } else {//внешняя команда
-            vector<char *> arg= exclVector(cmd,input);
-            string path = "/bin/" + cmd;
+        } else {
+            string cmd = getcmd(input);
 
-            pid_t pid = fork();
-            if (pid == 0) {
-                execvp(path.c_str(), &arg[0]);
-            } else {
-                int info;
-                waitpid(pid, &info, 0);//родитель ждёт исполненя ребёнка
+
+            if (cmd == "cd") {
+                cd(input);
+            } else if (cmd == "pwd") {
+                cout << dir;
+            } else if (cmd == "time") {//работает не всегда корректно
+                time(cmd, input);
+            } else {//внешняя команда
+                vector<char *> arg = exclVector(cmd, input);
+                string path = "/bin/" + cmd;
+
+                pid_t pid = fork();
+                if (pid == 0) {
+                    execvp(path.c_str(), &arg[0]);
+                } else {
+                    int info;
+                    waitpid(pid, &info, 0);//родитель ждёт исполненя ребёнка
+                }
             }
+
         }
-
-
     }
 
 
