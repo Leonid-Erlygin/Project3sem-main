@@ -3,13 +3,9 @@
 #include <vector>
 #include <wait.h>
 #include <fcntl.h>
+#include <cstring>
 
 using namespace std;
-
-string getcmd(string &input) {//returns first word
-    string cmd = input.substr(0, input.find(' '));
-    return cmd;
-}
 
 string getCwd() {
     char *add = (char *) malloc(sizeof(char) * 10000);
@@ -17,34 +13,55 @@ string getCwd() {
     return s;
 }
 
-//добавить к каждой входной строчке пробел в конце
-vector<char *> exclVector(string &input) {//формирует вектор аргументов(так как они пришли)
-    string cmd = getcmd(input);
+
+void addSpacesToEnd(string &s) {
+    s = s + " ";
+    unsigned long i = s.size();
+    while (i > 0 && (s[i - 1] == ' ')) {
+
+        i--;
+    }
+    s = s.substr(0, i + 1);
+}
+
+string getcmd(string &input) {//returns first word and truncates it
+    unsigned long s = input.find(' ');
+    string cmd = input.substr(0, s);
+    unsigned long i = s;
+    while ((i < input.size()) && input[i] == ' ')i++;
+
+    input = input.substr(i, input.size());
+
+
+    return cmd;
+}
+
+vector<char *> exclVector(string &cmd, string &input) {//формирует вектор аргументов(так как они пришли)
     vector<string> placeholder;
     vector<char *> arg;
     placeholder.push_back(cmd);
-
     int k = 0;
     while (!input.empty()) {
-        string s(input.substr(0, input.find(' ')));
+        unsigned long l = input.find(' ');
+        string s(input.substr(0, l));
         placeholder.push_back(s);
-        if (input.find(' ') + 1 != 0)
-            input = input.substr(input.find(' ') + 1, input.size());
-        else input = "";
+        unsigned long i = l;
+        while ((i < input.size()) && input[i])i++;
+
+
         k++;
+
+        input = input.substr(i, input.size());
     }
     for (int i = 0; i <= k; ++i) {
         arg.push_back((char *) placeholder[i].c_str());
     }
-    arg.push_back(NULL);
     return arg;
 }
-//переделать
+
 void time(string &cmd, string &input) {
-
-    vector<char *> arg = exclVector(input);
+    vector<char *> arg = exclVector(cmd, input);
     arg.push_back(NULL);
-
     string a = "time";
     string path = "/usr/bin/" + a;
     pid_t pid = fork();
@@ -60,9 +77,7 @@ void cd(string &input) {
     if (input.empty()) {
         char *home = getenv("HOME");
         int ch = chdir(home);
-
         cout << '\n';
-
     } else {
         int ch = chdir(input.c_str());
         cout << '\n';
@@ -88,51 +103,193 @@ void outRederection(string &command1, vector<char *> &args1, string &filename) {
         waitpid(pid, &info, 0);
     }
 }
-
-
+//notstable
+/*
 void f(string &s) {
-    close(0);
-    close(1);
-    int fd[2];
-    pipe(fd);
+    fprintf(stderr, "%s\n", &s[0]);
+    vector<int> processList;
+    vector<int> pipeArray(1000);
+    int i = 0;
+
     while (s.find('|') != -1) {
+        int ret = 0;
+        pipe(&pipeArray[i]);
+
         string cmd = s.substr(0, s.find('|'));
-        s = s.substr(0, s.find('|') + 1);
+        s = s.substr(s.find('|') + 1, s.size());
+
         pid_t id = fork();
+        //fprintf(stderr, "Hi, My child is: %d\n", id);
+        processList.push_back(id);
+        fprintf(stderr, "My id:%d %sMy child id: %d\n", getpid(), &s[0], id);
+        // printf("Hi,I'm %d\n",getpid());
         if (id == 0) {
-            string path = "/bin/" + getcmd(cmd);
-            vector<char *> arg = exclVector(cmd);
-            execvp(path.c_str(), &arg[0]);
+            if (processList.size() == 1) {
+                close(pipeArray[i]);
+                close(1);
+                dup2(pipeArray[i + 1], 1);//теперь дескриптор вывода показывет на вход pip'a
+                addSpacesToEnd(cmd);
+                string cm = getcmd(cmd);
+                string path = "/bin/" + cm;
+
+
+                vector<char *> arg = exclVector(cm, cmd);
+                fprintf(stderr, "First is launched: %d\n", getpid());
+                execvp(path.c_str(), &arg[0]);
+            } else {
+                //fprintf(stderr, "Hi, I'm second: %d\n", getpid());
+                int a;
+                if (processList.size() > 1) waitpid(processList[processList.size() - 2], &a, 0);
+
+                close(pipeArray[i]);
+                close(0);
+                dup2(pipeArray[i - 2], 0);
+                close(1);
+                dup2(pipeArray[i + 1], 1);//теперь дескриптор вывода показывет на вход pip'a
+                addSpacesToEnd(cmd);
+                string cm = getcmd(cmd);
+                string path = "/bin/" + cm;
+
+
+                vector<char *> arg = exclVector(cm, cmd);
+                ret = 0;
+                fprintf(stderr, "Another is launched: %d\n", getpid());
+                ret = execvp(path.c_str(), &arg[0]);
+                if (ret == -1)fprintf(stderr, "LOL %d Arguments:%s\n", getpid(), cm.c_str());
+                exit(1);
+            }
+
         } else {
+
+            //printf("I'm parent\n");
+            //printf("%s\n", &s[0]);
+            int a;
+
+            if (s.find('|') == -1) {
+                //fprintf(stderr, "Hi,I'm Out of the loop %d, i=%d\n", getpid(),i);
+
+                if (processList.size() > 0)waitpid(processList[processList.size() - 1], &a, 0);
+                close(pipeArray[i + 1]);
+                close(0);
+                addSpacesToEnd(cmd);
+                dup2(pipeArray[i], 0);
+                string cm = getcmd(s);
+                string path = "/bin/" + cm;
+                //   fprintf(stderr, "%s\n",&path[0]);
+                vector<char *> arg = exclVector(cm, s);
+                //    fprintf(stderr, "%s\n",&arg[0][0]);
+                //fprintf(stderr, "%s\n", arg[0]);
+                fprintf(stderr,"Final step\n");
+                execvp(path.c_str(), &arg[0]);
+            }
+            //waitpid(id,&a,0);//тут будет чудестный дедлок
+            //    fprintf(stderr, "Hi There, Я дождался сына: %d\n", id);
+            close(pipeArray[i + 1]);
+            i = i + 2;
             continue;
         }
 
     }
+    // printf("Hi, My child is: %d\n",id);
+
+
+
+}
+*/
+
+void g(string &s) {
+    int ret = 0;
+    vector<int> processList;
+    vector<int> pipeArray(1000);
+    int i = 0;
+    while (s.find('|') != -1) {
+
+        string cmd = s.substr(0, s.find('|'));
+        s = s.substr(s.find('|') + 1, s.size());
+
+        pipe(&pipeArray[i*2]);
+        int id = fork();
+        printf("I'm: %d\n",getpid());
+        processList.push_back(id);
+
+        if (id == 0) {
+            if (processList.size() == 1) {
+                close(pipeArray[2*i]);
+                close(1);
+                dup2(pipeArray[2*i+1], 1);
+                addSpacesToEnd(cmd);
+                string cm = getcmd(cmd);
+                vector<char *> arg = exclVector(cm, cmd);
+                string path = "/bin/" + cm;
+                ret = execvp(path.c_str(), &arg[0]);
+                if (ret == -1)fprintf(stderr,"Exec doesn't work. id: %d",getpid());
+                ret = 0;
+            } else {
+                if (processList.size() > 2) {
+                    printf("AAA %d\n",getpid());
+                    int a;
+                    waitpid(processList[processList.size() - 3], &a, 0);
+                }
+                close(0);
+                close(pipeArray[2*i-1]);
+                close(pipeArray[2*i]);
+                dup2(pipeArray[2*i-2], 0);
+                close(1);
+
+                dup2(pipeArray[2*i+1], 1);
+                addSpacesToEnd(cmd);
+                string cm = getcmd(cmd);
+                vector<char *> arg = exclVector(cm, cmd);
+                string path = "/bin/" + cm;
+                ret = execvp(path.c_str(), &arg[0]);
+                if (ret == -1)fprintf(stderr,"Exec doesn't work. id: %d\n",getpid());
+                ret = 0;
+            }
+        } else {
+            close(pipeArray[2*i+1]);
+            i++;
+            continue;
+        }
+    }
+    if (processList.size() >= 2) {
+
+        int a;
+        waitpid(processList[processList.size() - 2], &a, 0);
+    }
+    ret = 0;
+    close(0);
+    close(pipeArray[2*i-1]);
+    dup2(pipeArray[2*i-2],0);
+    addSpacesToEnd(s);
+    fprintf(stderr,"Finish\n");
+    string cm = getcmd(s);
+    vector<char *> arg = exclVector(cm, s);
+    string path = "/bin/" + cm;
+    ret = execvp(path.c_str(), &arg[0]);
+    if (ret == -1)fprintf(stderr,"Exec doesn't work. id: %d",getpid());
 }
 
 void pipeline(string &s) {
     pid_t id = fork();
     if (id == 0) {
-        f(s);
+        //fprintf(stderr, "Going in %d\n", getpid());
+        g(s);
+
     } else {
         int a;
         waitpid(id, &a, 0);
+        fprintf(stderr, "I met my child: %d\n", id);
     }
 }
 
-
 int main(int argc, char **argv, char **envp) {
     /*for (int i = 0; i <argc; ++i) {
-
-        cout<<argv[i];
+         cout<<argv[i];
     }
     putchar('\n');
     for (int i = 0; envp[i]!=NULL; ++i) {
        printf("%s\n",envp[i]);
-
-    }*/
-    string input = "2";
-
+     }*/
     uid_t a = getuid();
     char p;
     if (a == 0) {
@@ -144,13 +301,16 @@ int main(int argc, char **argv, char **envp) {
     while (x) {
         string dir = getCwd();
         cout << dir << p;
+        string input;
         getline(cin, input);
+        addSpacesToEnd(input);
 
         if (input.find('>') != -1) {
             string s1 = input.substr(0, input.find('>'));
             string s2 = input.substr(input.find('>') + 1, input.size());
             string command1 = getcmd(s1);
-            vector<char *> arg = exclVector(s1);
+
+            vector<char *> arg = exclVector(command1, s1);
             outRederection(command1, arg, s2);
 
         } else {
@@ -160,8 +320,6 @@ int main(int argc, char **argv, char **envp) {
 
             } else {
                 string cmd = getcmd(input);
-
-
                 if (cmd == "cd") {
                     cd(input);
                 } else if (cmd == "pwd") {
@@ -169,9 +327,8 @@ int main(int argc, char **argv, char **envp) {
                 } else if (cmd == "time") {//работает не всегда корректно
                     time(cmd, input);
                 } else {//внешняя команда
-                    vector<char *> arg = exclVector(input);
+                    vector<char *> arg = exclVector(cmd, input);
                     string path = "/bin/" + cmd;
-
                     pid_t pid = fork();
                     if (pid == 0) {
                         execvp(path.c_str(), &arg[0]);
@@ -183,7 +340,5 @@ int main(int argc, char **argv, char **envp) {
             }
         }
     }
-
-
     return 0;
 }
