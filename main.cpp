@@ -329,7 +329,7 @@ void g(string &s) {
     close(pipeArray[2 * i - 1]);
     dup2(pipeArray[2 * i - 2], 0);
     addSpacesToEnd(s);
-    fprintf(stderr, "Finish\n");
+    //fprintf(stderr, "Finish\n");
     string cm = getcmd(s);
     vector<char *> arg;
     vector<string> placeholder;
@@ -348,7 +348,7 @@ void pipeline(string &s) {
     } else {
         int a;
         waitpid(id, &a, 0);
-        fprintf(stderr, "I met my child: %d\n", id);
+        //fprintf(stderr, "I met my child: %d\n", id);
     }
 }
 
