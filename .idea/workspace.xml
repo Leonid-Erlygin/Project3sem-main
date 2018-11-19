@@ -35,10 +35,11 @@
       <file leaf-file-name="main.cpp" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/main.cpp">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="45">
-              <caret line="199" selection-start-line="199" selection-end-line="269" selection-end-column="1" />
+            <state relative-caret-position="195">
+              <caret line="209" column="30" lean-forward="true" selection-start-line="209" selection-start-column="30" selection-end-line="209" selection-end-column="30" />
               <folding>
                 <element signature="e#0#19#0" expanded="true" />
+                <element signature="e#2548#5696#0" />
               </folding>
             </state>
           </provider>
@@ -71,9 +72,9 @@
     <packageJsonPaths />
   </component>
   <component name="ProjectFrameBounds" extendedState="6">
-    <option name="x" value="67" />
-    <option name="y" value="25" />
-    <option name="width" value="1370" />
+    <option name="x" value="176" />
+    <option name="y" value="110" />
+    <option name="width" value="1380" />
     <option name="height" value="687" />
   </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
@@ -82,8 +83,8 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
-      <pane id="Scope" />
       <pane id="ProjectPane" />
+      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -135,7 +136,8 @@
       <workItem from="1542475080593" duration="6591000" />
       <workItem from="1542483137722" duration="2442000" />
       <workItem from="1542524930164" duration="18825000" />
-      <workItem from="1542553057874" duration="11847000" />
+      <workItem from="1542553057874" duration="14840000" />
+      <workItem from="1542611322676" duration="4334000" />
     </task>
     <task id="LOCAL-00001" summary="&gt;added">
       <created>1539591679064</created>
@@ -151,11 +153,18 @@
       <option name="project" value="LOCAL" />
       <updated>1542479092671</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="&gt;pipeTest">
+      <created>1542569438731</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1542569438731</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="78141000" />
+    <option name="totallyTimeSpent" value="85468000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="67" y="25" width="1853" height="1055" extended-state="6" />
@@ -163,11 +172,10 @@
     <layout>
       <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.041530054" />
       <window_info anchor="bottom" id="TODO" order="6" />
-      <window_info anchor="bottom" id="Messages" order="7" weight="0.3286334" />
       <window_info anchor="bottom" id="CMake" order="7" />
       <window_info anchor="bottom" id="Event Log" order="7" side_tool="true" />
       <window_info anchor="bottom" id="Version Control" order="7" weight="0.329718" />
-      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.12581345" />
+      <window_info anchor="bottom" id="Run" order="2" weight="0.12581345" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info anchor="bottom" id="Terminal" order="7" weight="0.32900432" />
       <window_info id="Favorites" order="2" side_tool="true" />
@@ -179,17 +187,29 @@
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Find" order="1" />
+      <window_info anchor="bottom" id="Messages" order="7" weight="0.3286334" />
     </layout>
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="1" />
+  </component>
+  <component name="Vcs.Log.History.Properties">
+    <option name="COLUMN_ORDER">
+      <list>
+        <option value="0" />
+        <option value="2" />
+        <option value="3" />
+        <option value="1" />
+      </list>
+    </option>
   </component>
   <component name="VcsContentAnnotationSettings">
     <option name="myLimit" value="2678400000" />
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="&gt;added" />
-    <option name="LAST_COMMIT_MESSAGE" value="&gt;added" />
+    <MESSAGE value="&gt;pipeTest" />
+    <option name="LAST_COMMIT_MESSAGE" value="&gt;pipeTest" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -202,10 +222,25 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/main.cpp">
       <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="4050">
+          <caret line="270" column="26" selection-start-line="270" selection-start-column="26" selection-end-line="270" selection-end-column="26" />
+          <folding>
+            <element signature="e#0#19#0" expanded="true" />
+            <element signature="e#2548#5696#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/CMakeLists.txt">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/main.cpp">
+      <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="2265">
           <caret line="151" column="18" selection-start-line="151" selection-start-column="18" selection-end-line="151" selection-end-column="18" />
           <folding>
             <element signature="e#0#19#0" expanded="true" />
+            <element signature="e#2548#5696#0" />
           </folding>
         </state>
       </provider>
@@ -219,6 +254,7 @@
           <caret line="12" column="67" selection-start-line="12" selection-start-column="67" selection-end-line="12" selection-end-column="67" />
           <folding>
             <element signature="e#0#19#0" expanded="true" />
+            <element signature="e#2548#5696#0" />
           </folding>
         </state>
       </provider>
@@ -232,6 +268,7 @@
           <caret line="90" column="33" selection-start-line="90" selection-start-column="33" selection-end-line="90" selection-end-column="33" />
           <folding>
             <element signature="e#0#19#0" expanded="true" />
+            <element signature="e#2548#5696#0" />
           </folding>
         </state>
       </provider>
@@ -245,6 +282,7 @@
           <caret line="107" column="18" selection-start-line="107" selection-start-column="18" selection-end-line="107" selection-end-column="18" />
           <folding>
             <element signature="e#0#19#0" expanded="true" />
+            <element signature="e#2548#5696#0" />
           </folding>
         </state>
       </provider>
@@ -258,6 +296,7 @@
           <caret line="107" column="18" selection-start-line="107" selection-start-column="18" selection-end-line="107" selection-end-column="18" />
           <folding>
             <element signature="e#0#19#0" expanded="true" />
+            <element signature="e#2548#5696#0" />
           </folding>
         </state>
       </provider>
@@ -271,6 +310,7 @@
           <caret line="107" column="18" selection-start-line="107" selection-start-column="18" selection-end-line="107" selection-end-column="18" />
           <folding>
             <element signature="e#0#19#0" expanded="true" />
+            <element signature="e#2548#5696#0" />
           </folding>
         </state>
       </provider>
@@ -284,6 +324,7 @@
           <caret line="107" column="18" selection-start-line="107" selection-start-column="18" selection-end-line="107" selection-end-column="18" />
           <folding>
             <element signature="e#0#19#0" expanded="true" />
+            <element signature="e#2548#5696#0" />
           </folding>
         </state>
       </provider>
@@ -297,6 +338,7 @@
           <caret line="125" column="12" selection-start-line="125" selection-start-column="12" selection-end-line="125" selection-end-column="12" />
           <folding>
             <element signature="e#0#19#0" expanded="true" />
+            <element signature="e#2548#5696#0" />
           </folding>
         </state>
       </provider>
@@ -310,6 +352,7 @@
           <caret line="17" column="31" lean-forward="true" selection-start-line="17" selection-start-column="31" selection-end-line="17" selection-end-column="31" />
           <folding>
             <element signature="e#0#19#0" expanded="true" />
+            <element signature="e#2548#5696#0" />
           </folding>
         </state>
       </provider>
@@ -323,6 +366,7 @@
           <caret line="64" column="41" lean-forward="true" selection-start-line="64" selection-start-column="41" selection-end-line="64" selection-end-column="41" />
           <folding>
             <element signature="e#0#19#0" expanded="true" />
+            <element signature="e#2548#5696#0" />
           </folding>
         </state>
       </provider>
@@ -336,6 +380,7 @@
           <caret line="97" column="58" selection-start-line="97" selection-start-column="58" selection-end-line="97" selection-end-column="58" />
           <folding>
             <element signature="e#0#19#0" expanded="true" />
+            <element signature="e#2548#5696#0" />
           </folding>
         </state>
       </provider>
@@ -349,6 +394,7 @@
           <caret line="97" column="58" selection-start-line="97" selection-start-column="58" selection-end-line="97" selection-end-column="58" />
           <folding>
             <element signature="e#0#19#0" expanded="true" />
+            <element signature="e#2548#5696#0" />
           </folding>
         </state>
       </provider>
@@ -362,6 +408,7 @@
           <caret line="80" column="46" lean-forward="true" selection-start-line="80" selection-start-column="46" selection-end-line="80" selection-end-column="46" />
           <folding>
             <element signature="e#0#19#0" expanded="true" />
+            <element signature="e#2548#5696#0" />
           </folding>
         </state>
       </provider>
@@ -378,10 +425,11 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/main.cpp">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="45">
-          <caret line="199" selection-start-line="199" selection-end-line="269" selection-end-column="1" />
+        <state relative-caret-position="195">
+          <caret line="209" column="30" lean-forward="true" selection-start-line="209" selection-start-column="30" selection-end-line="209" selection-end-column="30" />
           <folding>
             <element signature="e#0#19#0" expanded="true" />
+            <element signature="e#2548#5696#0" />
           </folding>
         </state>
       </provider>
