@@ -11,6 +11,7 @@
 
 using namespace std;
 
+<<<<<<< HEAD
 /*To fix
  * Обработать /(apparently works, need to test)
  * >|>
@@ -19,6 +20,8 @@ using namespace std;
  *Сигналы
  * Навести красоту
  * */
+=======
+>>>>>>> f082f3c7944f44eb52c6ef93f211cea865a8a3b4
 void deleteSpacesFromStart(string &s) {
     int i = 0;
     while (s[i] == ' ')i++;
@@ -397,6 +400,27 @@ void g(string &s) {
             }
         }
     }
+<<<<<<< HEAD
+=======
+    /*if (processList.size() >= 2) {
+
+        int a;
+        waitpid(processList[processList.size() - 2], &a, 0);
+    }*/
+    ret = 0;
+    close(0);
+    close(pipeArray[2 * i - 1]);
+    dup2(pipeArray[2 * i - 2], 0);
+    addSpacesToEnd(s);
+    //fprintf(stderr, "Finish\n");
+    string cm = getcmd(s);
+    vector<char *> arg;
+    vector<string> placeholder;
+    exclVector(cm, s, arg, placeholder);
+    string path = "/bin/" + cm;
+    ret = execvp(path.c_str(), &arg[0]);
+    if (ret == -1)fprintf(stderr, "Exec doesn't work. id: %d", getpid());
+>>>>>>> f082f3c7944f44eb52c6ef93f211cea865a8a3b4
 }
 
 void pipeline(string &s) {
@@ -407,6 +431,10 @@ void pipeline(string &s) {
     } else {
         int a;
         waitpid(id, &a, 0);
+<<<<<<< HEAD
+=======
+        //fprintf(stderr, "I met my child: %d\n", id);
+>>>>>>> f082f3c7944f44eb52c6ef93f211cea865a8a3b4
     }
 }
 
@@ -439,4 +467,9 @@ int main(int argc, char **argv, char **envp) {
             exit(1);
         }
     }
+<<<<<<< HEAD
 }
+=======
+    return 0;
+}
+>>>>>>> f082f3c7944f44eb52c6ef93f211cea865a8a3b4
