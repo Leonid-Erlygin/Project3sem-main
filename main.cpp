@@ -8,10 +8,13 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <dirent.h>
+#include <sys/time.h>
+#include <sys/resource.h>
 
 using namespace std;
 
-<<<<<<< HEAD
+pid_t CHILDid;
+
 /*To fix
  * Обработать /(apparently works, need to test)
  * >|>
@@ -20,12 +23,17 @@ using namespace std;
  *Сигналы
  * Навести красоту
  * */
-=======
->>>>>>> f082f3c7944f44eb52c6ef93f211cea865a8a3b4
+
 void deleteSpacesFromStart(string &s) {
     int i = 0;
     while (s[i] == ' ')i++;
     s = s.substr(i, s.size());
+}
+
+void deleteSpacesFromEnd(string &s) {
+    int i = s.size() - 1;
+    while (s[i] == ' ')i--;
+    s = s.substr(0, i + 1);
 }
 
 void addSpacesToEnd(string &s) {//Returns string with one space at the end.
@@ -230,6 +238,7 @@ int exclVector(string &cmd, string &input, vector<char *> &arg,
 void cd(string &input) {
 
     deleteSpacesFromStart(input);
+    deleteSpacesFromEnd(input);
     if (input.empty()) {
         char *home = getenv("HOME");
         struct stat st2;
@@ -245,7 +254,6 @@ void cd(string &input) {
         //cout << '\n';
     } else {
         struct stat st;
-        input = input.substr(0, input.size() - 1);
         if (stat(input.c_str(), &st) < 0) {
             fprintf(stderr, "CD error");
         }
@@ -264,181 +272,244 @@ void pwd() {
     char add[1000];
     char *s;
     s = getcwd(add, 1000);
-    printf("%s%c", s);
+    printf("%s\n", s);
     fflush(stdout);
 }
 
 
-//Для записи: open(name, O_RDWR | O_CREAT | O_TRUNC, 0666);
-//Для чтения: open(name, O_RDWR | O_CREAT, 0666);
-//перенаправления вывода одного процесса на ввод другого
-void rederection() {
-
+void execQuant(string &s, int read, int write) {
+    deleteSpacesFromEnd(s);
+    if (s.empty()){
+        exit(0);
+    }
+    else {
+        addSpacesToEnd(s);
+        string cmd = getcmd(s);
+        vector<char *> arg;
+        vector<string> placeholder;
+        if (read != 0) {
+            close(0);
+            dup2(read, 0);
+        }
+        if (write != 1) {
+            close(1);
+            dup2(write, 1);
+        }
+        if (cmd == "pwd") {
+            pwd();
+            exit(0);
+        }
+        int ret = 0;
+        exclVector(cmd, s, arg, placeholder);
+        if (arg[0] != NULL)ret = execvp(cmd.c_str(), &arg[0]);
+        if (ret == -1) {
+            fprintf(stderr, "Exec doesn't work. id: %d\n", getpid());
+            exit(0);
+        }
+        exit(0);
+    }
 }
 
-void execQuant(string &s,int read, int write){
+void readFromFile(string &s, int write) {
     addSpacesToEnd(s);
-    string cmd = getcmd(s);
-    vector<char *> arg;
-    vector<string> placeholder;
-    if (read!=0){
-        close(0);
-        dup2(read,0);
-    }
-    if (write!=0) {
-        close(1);
-        dup2(write, 1);
-    }
-
-    if (cmd == "time") {
-
-    }
-    if (cmd == "pwd") {
-        pwd();
+    string cmd = s.substr(0, s.find('<'));
+    s = s.substr(s.find('<') + 1, s.size());
+    if (s.find('<') != -1) {
+        fprintf(stderr, "Недопустимая команда: %s\n", (cmd + s).c_str());
         exit(0);
     }
-    if (cmd == "cd") {
-        cd(s);
+    deleteSpacesFromStart(s);
+    string name = s.substr(0, s.find(' '));
+    close(0);
+    open(name.c_str(), O_RDWR | O_CREAT, 0666);
+    execQuant(cmd, 0, write);
+}
+
+void writeToFile(string &s, int read) {
+    addSpacesToEnd(s);
+    string cmd = s.substr(0, s.find('>'));
+    s = s.substr(s.find('>') + 1, s.size());
+    if (s.find('>') != -1 || s.find('<') != -1) {
+        fprintf(stderr, "Недопустимая команда: %s\n", (cmd + s).c_str());
         exit(0);
     }
-    int ret = 0;
-    exclVector(cmd, s, arg, placeholder);
-    if (arg[0] != NULL)ret = execvp(cmd.c_str(), &arg[0]);
-    if (ret == -1)fprintf(stderr, "Exec doesn't work. id: %d", getpid());
+    deleteSpacesFromStart(s);
+    string name = s.substr(0, s.find(' '));
+    close(1);
+    open(name.c_str(), O_RDWR | O_CREAT | O_TRUNC, 0666);
+    execQuant(cmd, read, 1);
 }
 
 void g(string &s) {
-    int ret = 0;
     vector<int> processList;
     vector<int> pipeArray(1000);
     int i = 0;
+    //cat a | cat | cat
     if (s.find('|') != -1) {
         while (s.find('|') != -1) {
 
             string cmd = s.substr(0, s.find('|'));
             s = s.substr(s.find('|') + 1, s.size());
+
+            if (i == 0 && cmd.find('>') != -1) {
+                fprintf(stderr, "Недопустимая команда в компоненте конвеера: %s\n", cmd.c_str());
+                exit(0);
+            }
+            if (i > 0 && (cmd.find('>') != -1 || cmd.find('<') != -1)) {
+                fprintf(stderr, "Недопустимая команда в компоненте конвеера: %s\n", cmd.c_str());
+                exit(0);
+            }
             deleteSpacesFromStart(s);
+            addSpacesToEnd(s);
             pipe(&pipeArray[i * 2]);
             int id = fork();
             processList.push_back(id);
 
+
             if (id == 0) {
                 if (processList.size() == 1) {
+
+                    if (cmd.find('<') != -1) {
+                        readFromFile(cmd, pipeArray[2 * i + 1]);
+                    }
+
                     close(pipeArray[2 * i]);
-                    close(1);
-                    dup2(pipeArray[2 * i + 1], 1);
-                    execQuant(cmd,0,pipeArray[2*i+1]);
+                    execQuant(cmd, 0, pipeArray[2 * i + 1]);
 
-                    string cm = getcmd(cmd);
-                    vector<string> placeholder;
-                    vector<char *> arg;
-                    exclVector(cm, cmd, arg, placeholder);
-                    string path = cm;
-                    if (arg[0] != NULL) { ret = execvp(path.c_str(), &arg[0]); }
-                    else {
-                        exit(0);
-                    }
-                    if (ret == -1) {
-                        fprintf(stderr, "Exec doesn't work. id: %d", getpid());
-                    }
-                    ret = 0;
                 } else {
-
-                    close(0);
                     close(pipeArray[2 * i - 1]);
                     close(pipeArray[2 * i]);
-                    dup2(pipeArray[2 * i - 2], 0);
-                    close(1);
 
-                    dup2(pipeArray[2 * i + 1], 1);
-                    addSpacesToEnd(cmd);
-                    string cm = getcmd(cmd);
-                    vector<char *> arg;
-                    vector<string> placeholder;
-                    exclVector(cm, cmd, arg, placeholder);
+                    execQuant(cmd, pipeArray[2 * i - 2], pipeArray[2 * i + 1]);
 
-                    string path = cm;
-                    if (arg[0] != NULL)ret = execvp(path.c_str(), &arg[0]);
-                    if (ret == -1) {
-                        fprintf(stderr, "Exec doesn't work. id: %d errno: %d\n", getpid(), errno);
-                    }
-                    ret = 0;
                 }
             } else {
-
                 close(pipeArray[2 * i + 1]);
                 i++;
                 continue;
             }
         }
-
-        ret = 0;
-        close(0);
         close(pipeArray[2 * i - 1]);
-        dup2(pipeArray[2 * i - 2], 0);
-        addSpacesToEnd(s);
-        string cmd = getcmd(s);
-        vector<char *> arg;
-        vector<string> placeholder;
-        exclVector(cmd, s, arg, placeholder);
-        if (arg[0] != NULL)ret = execvp(cmd.c_str(), &arg[0]);
-        if (ret == -1)fprintf(stderr, "Exec doesn't work. id: %d", getpid());
-    } else {
-        if (s.find('>') == -1 && s.find('<') == -1) {
-
-
-        } else {
-            while (!s.empty()) {
-                if (s.find('>') != -1 && s.find('<') != -1) {
-                    if (s.find('>') < s.find('<')) {
-
-                    }
-                    if (s.find('<') < s.find('>')) {
-
-                    }
-                }
-            }
+        if (s.find('<') != -1) {
+            fprintf(stderr, "Недопустимая команда в компоненте конвеера: %s\n", s.c_str());
+            exit(0);
         }
-    }
-<<<<<<< HEAD
-=======
-    /*if (processList.size() >= 2) {
+        if (s.find('>') != -1) {
+            writeToFile(s, pipeArray[2 * i - 2]);
+        }
 
-        int a;
-        waitpid(processList[processList.size() - 2], &a, 0);
-    }*/
-    ret = 0;
-    close(0);
-    close(pipeArray[2 * i - 1]);
-    dup2(pipeArray[2 * i - 2], 0);
-    addSpacesToEnd(s);
-    //fprintf(stderr, "Finish\n");
-    string cm = getcmd(s);
-    vector<char *> arg;
-    vector<string> placeholder;
-    exclVector(cm, s, arg, placeholder);
-    string path = "/bin/" + cm;
-    ret = execvp(path.c_str(), &arg[0]);
-    if (ret == -1)fprintf(stderr, "Exec doesn't work. id: %d", getpid());
->>>>>>> f082f3c7944f44eb52c6ef93f211cea865a8a3b4
+        execQuant(s, pipeArray[2 * i - 2], 1);
+
+    } else {
+        if (s.find('>') != -1 && s.find('<') != -1) {
+            if (s.find('>') < s.find('<')) {
+                writeToFile(s, 0);
+            }
+            if (s.find('<') < s.find('>')) {
+                addSpacesToEnd(s);
+                string cmd = s.substr(0, s.find('<'));
+                s = s.substr(s.find('<') + 1, s.size());
+                deleteSpacesFromStart(s);
+                if ((s.find('<') != -1) && (s.find('<') < s.find('>'))) {
+                    fprintf(stderr, "Недопустимая команда: %s\n", s.c_str());
+                    exit(0);
+                }
+                string name = s.substr(0, s.find('>'));
+                deleteSpacesFromStart(name);
+                deleteSpacesFromEnd(name);
+                close(0);
+                close(1);
+                s = s.substr(s.find('>') + 1, s.size());
+                if (s.find('>') != -1 || s.find('<') != -1) {
+                    fprintf(stderr, "Недопустимая команда: %s\n", s.c_str());
+                    exit(0);
+                }
+                deleteSpacesFromStart(s);
+                deleteSpacesFromEnd(s);
+                open(name.c_str(), O_RDWR | O_CREAT, 0666);
+                open(s.c_str(), O_RDWR | O_CREAT | O_TRUNC, 0666);
+                execQuant(cmd, 0, 1);
+
+            }
+        } else {
+
+            if (s.find('<') != -1)
+                readFromFile(s, 1);
+
+            if (s.find('>') != -1)
+                writeToFile(s, 0);
+
+            execQuant(s, 0, 1);
+        }
+
+    }
 }
 
 void pipeline(string &s) {
-    pid_t id = fork();
-    if (id == 0) {
-        g(s);
+    if (s.find("time") != -1) {
+        struct rusage r;
+        s = s.substr(s.find(' ')+1,s.size());
+        struct timeval start;
+        gettimeofday(&start, NULL);
 
+        unsigned long long Start =
+                (unsigned long long)(start.tv_sec) * 1000000 +
+                (unsigned long long)(start.tv_usec);
+        pid_t id = fork();
+        CHILDid = id;
+
+
+        if (id == 0) {
+            g(s);
+        } else {
+            int a;
+            waitpid(id, &a, 0);
+            getrusage(RUSAGE_CHILDREN,&r);
+            struct timeval UserCpu = r.ru_utime;
+            struct timeval SysCpu = r.ru_stime;
+            struct timeval end;
+
+            gettimeofday(&end, NULL);
+
+            unsigned long long End =
+                    (unsigned long long)(end.tv_sec) * 1000000 +
+                    (unsigned long long)(end.tv_usec);
+
+            unsigned long long realMin = (End-Start)/(60000000);
+            double realsec = ((double)((End-Start)%(60000000)))/1000000;
+
+            double Usertime = UserCpu.tv_sec + (((double) UserCpu.tv_usec)/1000000);
+            double Systime = SysCpu.tv_sec + (((double) SysCpu.tv_usec)/1000000);
+            int Usermin = (int)(Usertime/60);
+            int Sysmin = (int)(Systime/60);
+            double Usersec = Usertime - 60*Usermin;
+            double Syssec = Systime - 60*Sysmin;
+            printf("\n\nreal    %llu%fs\nuser    %dm%fs\nsys     %dm%fs\n",realMin,realsec,Usermin,Usersec,Sysmin,Syssec);
+        }
     } else {
-        int a;
-        waitpid(id, &a, 0);
-<<<<<<< HEAD
-=======
-        //fprintf(stderr, "I met my child: %d\n", id);
->>>>>>> f082f3c7944f44eb52c6ef93f211cea865a8a3b4
+        pid_t id = fork();
+        CHILDid = id;
+        if (id == 0) {
+            g(s);
+        } else {
+            int a;
+            waitpid(id, &a, 0);
+        }
     }
 }
 
+
+void sigHandler(int sig){
+
+    if (sig == SIGINT){
+        kill(CHILDid,3);
+    }
+}
+
+
 int main(int argc, char **argv, char **envp) {
+
+    signal(SIGINT,sigHandler);
 
     uid_t a = getuid();
     char p;
@@ -459,7 +530,11 @@ int main(int argc, char **argv, char **envp) {
         if (!getline(cin, input).fail()) {
             deleteSpacesFromStart(input);
             addSpacesToEnd(input);
-            pipeline(input);
+            string cmd = input.substr(0, input.find(' '));
+            if (cmd == "cd") {
+                string dir = input.substr(input.find(' '), input.size());
+                cd(dir);
+            } else pipeline(input);
 
 
         } else {
@@ -467,9 +542,10 @@ int main(int argc, char **argv, char **envp) {
             exit(1);
         }
     }
-<<<<<<< HEAD
-}
-=======
+
     return 0;
 }
->>>>>>> f082f3c7944f44eb52c6ef93f211cea865a8a3b4
+
+
+
+
