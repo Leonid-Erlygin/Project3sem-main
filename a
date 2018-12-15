@@ -1,1 +1,29 @@
-abcdef
+итого 2097316
+drwxr-xr-x   2 root root       4096 ноя 24 17:03 bin
+drwxr-xr-x   3 root root       4096 дек  5 17:02 boot
+drwxrwxr-x   2 root root       4096 июл 11 00:11 cdrom
+drwxr-xr-x  19 root root       4440 дек 15 16:13 dev
+drwxr-xr-x 144 root root      12288 дек 13 10:18 etc
+drwxr-xr-x   3 root root       4096 июл 11 00:11 home
+lrwxrwxrwx   1 root root         33 дек  4 16:16 initrd.img -> boot/initrd.img-4.15.0-42-generic
+lrwxrwxrwx   1 root root         33 дек  4 16:16 initrd.img.old -> boot/initrd.img-4.15.0-39-generic
+drwxr-xr-x  24 root root       4096 июл 12 23:36 lib
+drwxr-xr-x   2 root root       4096 апр 26  2018 lib64
+drwx------   2 root root      16384 июл 11 00:09 lost+found
+drwxr-xr-x   3 root root       4096 июл 16 19:47 media
+drwxr-xr-x   2 root root       4096 апр 26  2018 mnt
+drwxr-xr-x   2 root root       4096 апр 26  2018 opt
+dr-xr-xr-x 268 root root          0 дек 15 16:12 proc
+drwx------   3 root root       4096 апр 26  2018 root
+drwxr-xr-x  30 root root        980 дек 15 16:13 run
+drwxr-xr-x   2 root root      12288 ноя 24 17:03 sbin
+drwxr-xr-x  12 root root       4096 ноя  3 19:24 snap
+drwxr-xr-x   2 root root       4096 апр 26  2018 srv
+-rw-------   1 root root 2147483648 окт 20 14:44 swapfile
+dr-xr-xr-x  13 root root          0 дек 15 16:12 sys
+drwxr-xr-x   4 root root       4096 июл 23 22:52 System
+drwxrwxrwt  14 root root      57344 дек 15 16:15 tmp
+drwxr-xr-x  11 root root       4096 окт 27 10:03 usr
+drwxr-xr-x  14 root root       4096 апр 26  2018 var
+lrwxrwxrwx   1 root root         30 дек  4 16:16 vmlinuz -> boot/vmlinuz-4.15.0-42-generic
+lrwxrwxrwx   1 root root         30 дек  4 16:16 vmlinuz.old -> boot/vmlinuz-4.15.0-39-generic

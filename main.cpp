@@ -16,12 +16,12 @@ using namespace std;
 pid_t CHILDid;
 
 /*To fix
- * Обработать /(apparently works, need to test)
- * >|>
- * Добавить внутренние команды на конвеер
- *Время
- *Сигналы
- * Навести красоту
+ *
+ *
+ *
+ *
+ *
+ *
  * */
 
 void deleteSpacesFromStart(string &s) {
@@ -243,7 +243,7 @@ void cd(string &input) {
         char *home = getenv("HOME");
         struct stat st2;
         if (stat(home, &st2) < 0) {
-            fprintf(stderr, "CD error");
+            fprintf(stderr, "CD error ");
         }
         if (S_ISDIR(st2.st_mode)) {
 
@@ -279,10 +279,10 @@ void pwd() {
 
 void execQuant(string &s, int read, int write) {
     deleteSpacesFromEnd(s);
-    if (s.empty()){
+    deleteSpacesFromStart(s);
+    if (s.empty()) {
         exit(0);
-    }
-    else {
+    } else {
         addSpacesToEnd(s);
         string cmd = getcmd(s);
         vector<char *> arg;
@@ -303,7 +303,8 @@ void execQuant(string &s, int read, int write) {
         exclVector(cmd, s, arg, placeholder);
         if (arg[0] != NULL)ret = execvp(cmd.c_str(), &arg[0]);
         if (ret == -1) {
-            fprintf(stderr, "Exec doesn't work. id: %d\n", getpid());
+
+            fprintf(stderr, "Ошибка программы: %s\n", (cmd + s).c_str());
             exit(0);
         }
         exit(0);
@@ -341,10 +342,9 @@ void writeToFile(string &s, int read) {
 }
 
 void g(string &s) {
-    vector<int> processList;
     vector<int> pipeArray(1000);
     int i = 0;
-    //cat a | cat | cat
+    int k = 0;//components counters
     if (s.find('|') != -1) {
         while (s.find('|') != -1) {
 
@@ -361,13 +361,18 @@ void g(string &s) {
             }
             deleteSpacesFromStart(s);
             addSpacesToEnd(s);
+            deleteSpacesFromEnd(cmd);
+            if (cmd.empty()) {
+                fprintf(stderr, "Нет команды в компоненте конвеера:\n");
+            }
+
             pipe(&pipeArray[i * 2]);
             int id = fork();
-            processList.push_back(id);
+            k++;
 
 
             if (id == 0) {
-                if (processList.size() == 1) {
+                if (k == 1) {
 
                     if (cmd.find('<') != -1) {
                         readFromFile(cmd, pipeArray[2 * i + 1]);
@@ -407,6 +412,7 @@ void g(string &s) {
             }
             if (s.find('<') < s.find('>')) {
                 addSpacesToEnd(s);
+                deleteSpacesFromEnd(s);
                 string cmd = s.substr(0, s.find('<'));
                 s = s.substr(s.find('<') + 1, s.size());
                 deleteSpacesFromStart(s);
@@ -432,6 +438,7 @@ void g(string &s) {
 
             }
         } else {
+            deleteSpacesFromStart(s);
 
             if (s.find('<') != -1)
                 readFromFile(s, 1);
@@ -445,46 +452,52 @@ void g(string &s) {
     }
 }
 
+void getTime(struct rusage r, struct timeval start) {
+    getrusage(RUSAGE_CHILDREN, &r);
+    struct timeval UserCpu = r.ru_utime;
+    struct timeval SysCpu = r.ru_stime;
+    struct timeval end;
+    unsigned long long Start =
+            (unsigned long long) (start.tv_sec) * 1000000 +
+            (unsigned long long) (start.tv_usec);
+    gettimeofday(&end, NULL);
+
+    unsigned long long End =
+            (unsigned long long) (end.tv_sec) * 1000000 +
+            (unsigned long long) (end.tv_usec);
+
+    unsigned long long realMin = (End - Start) / (60000000);
+    double realsec = ((double) ((End - Start) % (60000000))) / 1000000;
+
+    double Usertime = UserCpu.tv_sec + (((double) UserCpu.tv_usec) / 1000000);
+    double Systime = SysCpu.tv_sec + (((double) SysCpu.tv_usec) / 1000000);
+    int Usermin = (int) (Usertime / 60);
+    int Sysmin = (int) (Systime / 60);
+    double Usersec = Usertime - 60 * Usermin;
+    double Syssec = Systime - 60 * Sysmin;
+    printf("\n\nreal    %llum%fs\nuser    %dm%fs\nsys     %dm%fs\n", realMin, realsec, Usermin, Usersec, Sysmin,
+           Syssec);
+}
+
 void pipeline(string &s) {
     if (s.find("time") != -1) {
         struct rusage r;
-        s = s.substr(s.find(' ')+1,s.size());
+        s = s.substr(s.find(' ') + 1, s.size());
         struct timeval start;
         gettimeofday(&start, NULL);
 
         unsigned long long Start =
-                (unsigned long long)(start.tv_sec) * 1000000 +
-                (unsigned long long)(start.tv_usec);
+                (unsigned long long) (start.tv_sec) * 1000000 +
+                (unsigned long long) (start.tv_usec);
         pid_t id = fork();
         CHILDid = id;
-
 
         if (id == 0) {
             g(s);
         } else {
             int a;
             waitpid(id, &a, 0);
-            getrusage(RUSAGE_CHILDREN,&r);
-            struct timeval UserCpu = r.ru_utime;
-            struct timeval SysCpu = r.ru_stime;
-            struct timeval end;
-
-            gettimeofday(&end, NULL);
-
-            unsigned long long End =
-                    (unsigned long long)(end.tv_sec) * 1000000 +
-                    (unsigned long long)(end.tv_usec);
-
-            unsigned long long realMin = (End-Start)/(60000000);
-            double realsec = ((double)((End-Start)%(60000000)))/1000000;
-
-            double Usertime = UserCpu.tv_sec + (((double) UserCpu.tv_usec)/1000000);
-            double Systime = SysCpu.tv_sec + (((double) SysCpu.tv_usec)/1000000);
-            int Usermin = (int)(Usertime/60);
-            int Sysmin = (int)(Systime/60);
-            double Usersec = Usertime - 60*Usermin;
-            double Syssec = Systime - 60*Sysmin;
-            printf("\n\nreal    %llu%fs\nuser    %dm%fs\nsys     %dm%fs\n",realMin,realsec,Usermin,Usersec,Sysmin,Syssec);
+            getTime(r, start);
         }
     } else {
         pid_t id = fork();
@@ -499,17 +512,17 @@ void pipeline(string &s) {
 }
 
 
-void sigHandler(int sig){
+void sigHandler(int sig) {
 
-    if (sig == SIGINT){
-        kill(CHILDid,3);
+    if (sig == SIGINT) {
+        kill(CHILDid, 3);
     }
 }
 
 
 int main(int argc, char **argv, char **envp) {
 
-    signal(SIGINT,sigHandler);
+    signal(SIGINT, sigHandler);
 
     uid_t a = getuid();
     char p;
